@@ -279,8 +279,8 @@ void ILI9341_DrawColorBurst(uint16_t color, uint32_t size)
 		BufferSize = BURST_MAX_SIZE;
 	}
 
-	HAL_GPIO_WritePin(LCD_DC_PORT, LCD_DC_PIN, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(LCD_CS_PORT, LCD_CS_PIN, GPIO_PIN_RESET);
+//	HAL_GPIO_WritePin(LCD_DC_PORT, LCD_DC_PIN, GPIO_PIN_SET);
+//	HAL_GPIO_WritePin(LCD_CS_PORT, LCD_CS_PIN, GPIO_PIN_RESET);
 
 	uint8_t chifted = color>>8;
 	uint8_t BurstBuffer[BURST_MAX_SIZE];//BufferSize
@@ -299,12 +299,14 @@ void ILI9341_DrawColorBurst(uint16_t color, uint32_t size)
 	{
 		for(uint32_t j = 0; j < (SendingInBlock); j++)
 		{
-			HAL_SPI_Transmit(HSPI_INSTANCE, BurstBuffer, BufferSize, 10);
+//			HAL_SPI_Transmit(HSPI_INSTANCE, BurstBuffer, BufferSize, 10);
+			ILI9341_WriteBuffer (BurstBuffer, BufferSize);
 		}
 	}
 
-	HAL_SPI_Transmit(HSPI_INSTANCE, BurstBuffer, RemainderFromBlock, 10);
-	HAL_GPIO_WritePin(LCD_CS_PORT, LCD_CS_PIN, GPIO_PIN_SET);
+//	HAL_SPI_Transmit(HSPI_INSTANCE, BurstBuffer, RemainderFromBlock, 10);
+	ILI9341_WriteBuffer (BurstBuffer, RemainderFromBlock);
+//	HAL_GPIO_WritePin(LCD_CS_PORT, LCD_CS_PIN, GPIO_PIN_SET);
 }
 
 void ILI9341_FillScreen(uint16_t color)

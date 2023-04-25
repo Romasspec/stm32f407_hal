@@ -427,6 +427,26 @@
               <FileType>8</FileType>
               <FilePath>..\Src\ILI9341_STM32_Driver.cpp</FilePath>
             </File>
+            <File>
+              <FileName>fonts.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\fonts.c</FilePath>
+            </File>
+            <File>
+              <FileName>ILI9341_GFX.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\Src\ILI9341_GFX.cpp</FilePath>
+            </File>
+            <File>
+              <FileName>drv_serial.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\drv_serial.c</FilePath>
+            </File>
+            <File>
+              <FileName>gps.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\gps.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -446,6 +466,26 @@
               <FileName>stm32f4xx_it.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\Inc\stm32f4xx_it.h</FilePath>
+            </File>
+            <File>
+              <FileName>fonts.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Inc\fonts.h</FilePath>
+            </File>
+            <File>
+              <FileName>ILI9341_GFX.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Inc\ILI9341_GFX.h</FilePath>
+            </File>
+            <File>
+              <FileName>ILI9341_STM32_Driver.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Inc\ILI9341_STM32_Driver.h</FilePath>
+            </File>
+            <File>
+              <FileName>drv_serial.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Inc\drv_serial.h</FilePath>
             </File>
           </Files>
         </Group>
@@ -551,6 +591,16 @@
               <FileName>stm32f4xx_hal_dma.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_dma.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4xx_hal_uart.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_uart.h</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4xx_hal_uart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_uart.c</FilePath>
             </File>
           </Files>
         </Group>

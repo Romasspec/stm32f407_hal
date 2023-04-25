@@ -2,15 +2,25 @@
 #include "main.h"
 #include "stm32f4xx_hal.h"
 #include "ILI9341_STM32_Driver.h"
+#include "ILI9341_GFX.h"
+#include "drv_serial.h"
+#include "gps.h"
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_SPI1_Init(void);
+static void MX_USART4_Init(void);
 
 SPI_HandleTypeDef hspi1;
 DMA_HandleTypeDef hdma_spi1_tx;
+UART_HandleTypeDef uarthandl;
+uint8_t str[3];
+
+serialPort_t serial;
+
+
 
 #define FLASH_PAGE_COUNT 4
 #define FLASH_PAGE_SIZE                 ((uint32_t)0x20000)
@@ -25,9 +35,10 @@ int main (void)
 	MX_GPIO_Init();
 	MX_DMA_Init();
 	MX_SPI1_Init();
+	MX_USART4_Init();
 	
 	ILI9341_Init();
-	ILI9341_FillScreen (RED);
+	ILI9341_FillScreen (BLUE);
 	
 	uint32_t sector_error = 0;
 	FLASH_EraseInitTypeDef	EraseInitStruct;
@@ -50,24 +61,45 @@ int main (void)
 		//HAL_FLASHEx_Erase(&EraseInitStruct, &sector_error);
 		HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_SET);
 		HAL_FLASH_Unlock();
-		HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, FLASH_WRITE_ADDR, 0x55667788);		
+		//HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, FLASH_WRITE_ADDR, 0x55667788);		
 		HAL_FLASH_Lock();
 				
 	}
 	__enable_irq();
+
+	HAL_UART_Receive_IT(&uarthandl, str, 1);
 	
+	uint32_t timer_gps_get = HAL_GetTick();
+	uint32_t timer_LCD_out = HAL_GetTick();
 	while(1)
 	{
-		static uint32_t Data, led_timeout;
+		static uint32_t Data;
 		static char BufferText[40];
 		
 		Data = *(uint32_t*)FLASH_WRITE_ADDR;
 		sprintf(BufferText, "0x%X  %X", FLASH_WRITE_ADDR, Data);
 		
-		if (led_timeout++ > LED_TIMEOUT) {
-			HAL_GPIO_TogglePin(LD4_GPIO_Port, LD4_Pin);
-			led_timeout = 0;
+		
+		
+		if ((HAL_GetTick() - timer_LCD_out) > LED_TIMEOUT) {
+			
+			timer_LCD_out = HAL_GetTick();
+			sprintf(BufferText, "%u  %u", serial.rxBufferHead, serial.rxBufferTail);
+			HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_SET);
+			ILI9341_DrawText (BufferText, FONT1, 10, 20, GREENYELLOW, BLUE);
+			HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_RESET);			
+			
+			if ((serial.rxBufferHead - serial.rxBufferTail) > 3) {
+				ILI9341_DrawText (((char*)serial.rxBuffer)+serial.rxBufferTail, FONT1, 10, 50, GREEN, BLUE);
+				serial.rxBufferTail = (serial.rxBufferTail + 3) % serial.rx_bufferSize;
+			}
 		}
+		
+		if ((HAL_GetTick() - timer_gps_get) > GPS_TIMEOUT) {
+			timer_gps_get = HAL_GetTick();						
+			gpsThread();
+		}
+		
 		
 	}
 }
@@ -134,7 +166,7 @@ static void MX_GPIO_Init(void)
 	/* GPIO Ports Clock Enable */
 	//	__HAL_RCC_GPIOH_CLK_ENABLE();
 	__HAL_RCC_GPIOC_CLK_ENABLE();
-	//	__HAL_RCC_GPIOA_CLK_ENABLE();
+	__HAL_RCC_GPIOA_CLK_ENABLE();
 	__HAL_RCC_GPIOD_CLK_ENABLE();
 
 	/*Configure GPIO pin Output Level */
@@ -193,6 +225,39 @@ static void MX_SPI1_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
+}
+
+static void MX_USART4_Init (void)
+{
+	uarthandl.Instance			= UART4;
+	uarthandl.Init.BaudRate		= 9600;
+	uarthandl.Init.WordLength 	= UART_WORDLENGTH_8B;
+	uarthandl.Init.StopBits		= UART_STOPBITS_1;
+	uarthandl.Init.Parity		= UART_PARITY_NONE;
+	uarthandl.Init.HwFlowCtl	= UART_HWCONTROL_NONE;
+	uarthandl.Init.Mode			= UART_MODE_RX;
+	
+	
+//	if(HAL_UART_DeInit(&uarthandl) != HAL_OK) {
+//		Error_Handler();
+//	}
+	if(HAL_UART_Init(&uarthandl) != HAL_OK) {
+		
+		Error_Handler();
+	}
+	serialInit(&serial);	
+}
+
+void HAL_UART_RxCpltCallback (UART_HandleTypeDef *huart4)
+{
+	
+	HAL_UART_Receive_IT(&uarthandl, str, 1);
+	
+	if(huart4 == &uarthandl) {
+		serial.rxBuffer[serial.rxBufferHead] = str[0];
+		serial.rxBufferHead = (serial.rxBufferHead + 1) % serial.rx_bufferSize;
+		
+	}
 }
 
 void _Error_Handler(char *file, int line)

@@ -196,6 +196,27 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* hspi)
 
 //}
 
+void HAL_UART_MspInit(UART_HandleTypeDef *huart)
+{  
+	GPIO_InitTypeDef GPIO_InitStruct;
+	//UART4
+	//PC10 - TX, PC11 - RX
+		
+	__HAL_RCC_GPIOC_CLK_ENABLE();
+	__HAL_RCC_UART4_CLK_ENABLE();
+	
+	GPIO_InitStruct.Pin			= GPIO_PIN_11;
+	GPIO_InitStruct.Mode		= GPIO_MODE_AF_PP;
+	GPIO_InitStruct.Pull		= GPIO_NOPULL;
+	GPIO_InitStruct.Speed		= GPIO_SPEED_HIGH;
+	GPIO_InitStruct.Alternate	= GPIO_AF8_UART4;
+	HAL_GPIO_Init (GPIOC, &GPIO_InitStruct);
+	
+	HAL_NVIC_SetPriority (UART4_IRQn, 0, 1);
+	HAL_NVIC_EnableIRQ (UART4_IRQn);
+}
+
+
 /* USER CODE BEGIN 1 */
 
 /* USER CODE END 1 */

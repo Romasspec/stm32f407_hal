@@ -69,7 +69,8 @@
 #define LD6_Pin GPIO_PIN_15
 #define LD6_GPIO_Port GPIOD
 
-#define LED_TIMEOUT		100000
+#define LED_TIMEOUT		1000
+#define GPS_TIMEOUT		100
 
 
 /* ########################## Assert Selection ############################## */

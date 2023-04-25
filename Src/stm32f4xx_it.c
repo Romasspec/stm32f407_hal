@@ -42,6 +42,7 @@
 /* External variables --------------------------------------------------------*/
 extern DMA_HandleTypeDef hdma_spi1_tx;
 extern SPI_HandleTypeDef hspi1;
+extern UART_HandleTypeDef uarthandl;
 
 /******************************************************************************/
 /*            Cortex-M4 Processor Interruption and Exception Handlers         */ 
@@ -219,6 +220,11 @@ void DMA2_Stream3_IRQHandler(void)
   /* USER CODE BEGIN DMA2_Stream3_IRQn 1 */
 
   /* USER CODE END DMA2_Stream3_IRQn 1 */
+}
+
+void UART4_IRQHandler (void)
+{
+	HAL_UART_IRQHandler (&uarthandl);
 }
 
 /* USER CODE BEGIN 1 */
