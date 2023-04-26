@@ -20,6 +20,12 @@ uint8_t str[3];
 
 serialPort_t serial;
 
+extern bool GPS_FIX;
+int32_t GPS_coord[2] = {0,0};
+uint8_t GPS_numSat = 0;
+uint16_t GPS_altitude = 0, GPS_speed = 0;   // altitude in 0.1m and speed in 0.1m/s
+uint16_t GPS_ground_course = 0;     // degrees * 10
+
 
 
 #define FLASH_PAGE_COUNT 4
@@ -38,15 +44,15 @@ int main (void)
 	MX_USART4_Init();
 	
 	ILI9341_Init();
-	ILI9341_FillScreen (BLUE);
+	ILI9341_FillScreen (BLACK);
 	
-	uint32_t sector_error = 0;
-	FLASH_EraseInitTypeDef	EraseInitStruct;
-	EraseInitStruct.Banks = FLASH_BANK_1;
-	EraseInitStruct.NbSectors = 1;
-	EraseInitStruct.TypeErase = FLASH_TYPEERASE_SECTORS;
-	EraseInitStruct.Sector = FLASH_SECTOR_7;
-	EraseInitStruct.VoltageRange = FLASH_VOLTAGE_RANGE_3;
+//	uint32_t sector_error = 0;
+//	FLASH_EraseInitTypeDef	EraseInitStruct;
+//	EraseInitStruct.Banks = FLASH_BANK_1;
+//	EraseInitStruct.NbSectors = 1;
+//	EraseInitStruct.TypeErase = FLASH_TYPEERASE_SECTORS;
+//	EraseInitStruct.Sector = FLASH_SECTOR_7;
+//	EraseInitStruct.VoltageRange = FLASH_VOLTAGE_RANGE_3;
   
 	__disable_irq();
 //	HAL_FLASH_Unlock();
@@ -86,20 +92,30 @@ int main (void)
 			timer_LCD_out = HAL_GetTick();
 			sprintf(BufferText, "%u  %u", serial.rxBufferHead, serial.rxBufferTail);
 			HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_SET);
-			ILI9341_DrawText (BufferText, FONT1, 10, 20, GREENYELLOW, BLUE);
+			ILI9341_DrawText (BufferText, FONT1, 10, 20, WHITE, BLACK);
 			HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_RESET);			
 			
-			if ((serial.rxBufferHead - serial.rxBufferTail) > 3) {
-				ILI9341_DrawText (((char*)serial.rxBuffer)+serial.rxBufferTail, FONT1, 10, 50, GREEN, BLUE);
-				serial.rxBufferTail = (serial.rxBufferTail + 3) % serial.rx_bufferSize;
+//			if ((serial.rxBufferHead - serial.rxBufferTail) > 3) {
+//				ILI9341_DrawText (((char*)serial.rxBuffer)+serial.rxBufferTail, FONT1, 10, 50, GREEN, BLUE);
+//				serial.rxBufferTail = (serial.rxBufferTail + 3) % serial.rx_bufferSize;
+//			}
+			
+			sprintf(BufferText, "LAT%u   LON%u", GPS_coord[0], GPS_coord[1]);
+			ILI9341_DrawText (BufferText, FONT1, 10, 40, WHITE, BLACK);
+			sprintf(BufferText, "N%u   ALT%u", GPS_numSat, GPS_altitude);
+			ILI9341_DrawText (BufferText, FONT1, 10, 60, WHITE, BLACK);
+		
+			if ((HAL_GetTick() - timer_gps_get) > GPS_TIMEOUT) {
+				timer_gps_get = HAL_GetTick();						
+				gpsThread();
+				
+				if(GPS_FIX) {
+					HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, GPIO_PIN_SET);
+				} else {
+					HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, GPIO_PIN_RESET);
+				}
 			}
 		}
-		
-		if ((HAL_GetTick() - timer_gps_get) > GPS_TIMEOUT) {
-			timer_gps_get = HAL_GetTick();						
-			gpsThread();
-		}
-		
 		
 	}
 }

@@ -1,5 +1,9 @@
 #include "gps.h"
 extern serialPort_t serial;
+extern int32_t GPS_coord[2];
+extern uint8_t GPS_numSat;
+extern uint16_t GPS_altitude, GPS_speed;
+extern uint16_t GPS_ground_course;
 
 void gpsThread (void)
 {
@@ -37,6 +41,8 @@ typedef struct gpsMessage {
 	uint16_t ground_course;
 } gpsMessage_t;
 
+bool GPS_FIX;
+
 static bool gpsNewFrameNMEA(char c)
 {
 	uint8_t frameOK = 0;
@@ -57,13 +63,13 @@ static bool gpsNewFrameNMEA(char c)
 			string[offset] = 0;
             if (param == 0) {       // frame identification
                 gps_frame = NO_FRAME;
-                if (string[0] == 'G' && string[1] == 'P' && string[2] == 'G' && string[3] == 'G' && string[4] == 'A') {
+                if (string[0] == 'G' && string[1] == 'N' && string[2] == 'G' && string[3] == 'G' && string[4] == 'A') {
                     gps_frame = FRAME_GGA;
-					HAL_GPIO_TogglePin(LD4_GPIO_Port, LD4_Pin);
+					//HAL_GPIO_TogglePin(LD4_GPIO_Port, LD4_Pin);
 				}
                 if (string[0] == 'G' && string[1] == 'P' && string[2] == 'R' && string[3] == 'M' && string[4] == 'C') {
                     gps_frame = FRAME_RMC;
-					HAL_GPIO_TogglePin(LD5_GPIO_Port, LD5_Pin);
+					//HAL_GPIO_TogglePin(LD5_GPIO_Port, LD5_Pin);
 				}
             }
 			
@@ -85,7 +91,7 @@ static bool gpsNewFrameNMEA(char c)
                                 gps_msg.longitude *= -1;
                             break;
                         case 6:
-                            f.GPS_FIX = string[0] > '0';
+                            GPS_FIX = string[0] > '0';
                             break;
                         case 7:
                             gps_msg.numSat = grab_fields(string, 0);
@@ -114,6 +120,37 @@ static bool gpsNewFrameNMEA(char c)
 				else
 					parity ^= c;
 				break;
+				
+		case '\r':
+        case '\n':
+            if (checksum_param) {   //parity checksum
+                uint8_t checksum = 16 * ((string[0] >= 'A') ? string[0] - 'A' + 10 : string[0] - '0') + ((string[1] >= 'A') ? string[1] - 'A' + 10 : string[1] - '0');
+                if (checksum == parity) {
+                    switch (gps_frame) {
+                        case FRAME_GGA:
+                            frameOK = 1;
+                            if (GPS_FIX) {
+                                GPS_coord[LAT] = gps_msg.latitude;
+                                GPS_coord[LON] = gps_msg.longitude;
+                                GPS_numSat = gps_msg.numSat;
+                                GPS_altitude = gps_msg.altitude;
+//                                if (!sensors(SENSOR_BARO) && f.FIXED_WING)
+//                                    EstAlt = (GPS_altitude - GPS_home[ALT]) * 100;    // Use values Based on GPS
+                            }
+                            break;
+
+                        case FRAME_RMC:
+                            GPS_speed = gps_msg.speed;
+                            GPS_ground_course = gps_msg.ground_course;
+//                            if (!sensors(SENSOR_MAG) && GPS_speed > 100) {
+//                                GPS_ground_course = wrap_18000(GPS_ground_course * 10) / 10;
+//                                heading = GPS_ground_course / 10;    // Use values Based on GPS if we are moving.
+//                            }
+                            break;
+                    }
+                }
+            }
+            checksum_param = 0;
 					
 			break;
 		
@@ -169,3 +206,25 @@ uint32_t GPS_coord_to_degrees(char *s)
     return deg * 10000000UL + (min * 1000000UL + frac_min * 100UL) / 6;
 }
 
+// helper functions
+static uint32_t grab_fields(char *src, uint8_t mult)
+{
+    // convert string to uint32
+    uint32_t i;
+    uint32_t tmp = 0;
+    for (i = 0; src[i] != 0; i++) {
+        if (src[i] == '.') {
+            i++;
+            if (mult == 0)
+                break;
+            else
+                src[i + mult] = 0;
+        }
+        tmp *= 10;
+        if (src[i] >= '0' && src[i] <= '9')
+            tmp += src[i] - '0';
+        if (i >= 15)
+            return 0; // out of bounds
+    }
+    return tmp;
+}

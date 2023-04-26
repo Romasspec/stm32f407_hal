@@ -12,7 +12,7 @@ typedef struct	serialPort {
 	volatile uint8_t *txBuffer;
 }serialPort_t;
 
-#define UART4_RX_BUFFER_SIZE    256
+#define UART4_RX_BUFFER_SIZE    1024
 #define UART4_TX_BUFFER_SIZE    256
 
 void serialInit (serialPort_t* serial);
