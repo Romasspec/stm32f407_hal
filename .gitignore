@@ -3,3 +3,4 @@ $ cat .gitignore
 *.romas
 *.dep
 bin/
+project/
