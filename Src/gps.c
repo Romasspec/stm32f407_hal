@@ -67,7 +67,7 @@ static bool gpsNewFrameNMEA(char c)
                     gps_frame = FRAME_GGA;
 					//HAL_GPIO_TogglePin(LD4_GPIO_Port, LD4_Pin);
 				}
-                if (string[0] == 'G' && string[1] == 'P' && string[2] == 'R' && string[3] == 'M' && string[4] == 'C') {
+                if (string[0] == 'G' && string[1] == 'N' && string[2] == 'R' && string[3] == 'M' && string[4] == 'C') {
                     gps_frame = FRAME_RMC;
 					//HAL_GPIO_TogglePin(LD5_GPIO_Port, LD5_Pin);
 				}
@@ -91,7 +91,7 @@ static bool gpsNewFrameNMEA(char c)
                                 gps_msg.longitude *= -1;
                             break;
                         case 6:
-                            GPS_FIX = string[0] > '0';
+                            GPS_FIX = string[0] > '0'? true:false;
                             break;
                         case 7:
                             gps_msg.numSat = grab_fields(string, 0);
@@ -129,10 +129,11 @@ static bool gpsNewFrameNMEA(char c)
                     switch (gps_frame) {
                         case FRAME_GGA:
                             frameOK = 1;
+							GPS_numSat = gps_msg.numSat;
                             if (GPS_FIX) {
                                 GPS_coord[LAT] = gps_msg.latitude;
                                 GPS_coord[LON] = gps_msg.longitude;
-                                GPS_numSat = gps_msg.numSat;
+                               // GPS_numSat = gps_msg.numSat;
                                 GPS_altitude = gps_msg.altitude;
 //                                if (!sensors(SENSOR_BARO) && f.FIXED_WING)
 //                                    EstAlt = (GPS_altitude - GPS_home[ALT]) * 100;    // Use values Based on GPS

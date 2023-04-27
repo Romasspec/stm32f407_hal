@@ -100,10 +100,12 @@ int main (void)
 //				serial.rxBufferTail = (serial.rxBufferTail + 3) % serial.rx_bufferSize;
 //			}
 			
-			sprintf(BufferText, "LAT%u   LON%u", GPS_coord[0], GPS_coord[1]);
+			sprintf(BufferText, "LAT %u  LON %u", GPS_coord[0], GPS_coord[1]);
 			ILI9341_DrawText (BufferText, FONT1, 10, 40, WHITE, BLACK);
-			sprintf(BufferText, "N%u   ALT%u", GPS_numSat, GPS_altitude);
-			ILI9341_DrawText (BufferText, FONT1, 10, 60, WHITE, BLACK);
+			sprintf(BufferText, "N %u  ALT %u", GPS_numSat, GPS_altitude);
+			ILI9341_DrawText (BufferText, FONT1, 10, 60, WHITE, BLACK);			
+			sprintf(BufferText, "SP %u  CUR %u", GPS_speed, GPS_ground_course);
+			ILI9341_DrawText (BufferText, FONT1, 10, 80, WHITE, BLACK);
 		
 			if ((HAL_GetTick() - timer_gps_get) > GPS_TIMEOUT) {
 				timer_gps_get = HAL_GetTick();						
