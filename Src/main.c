@@ -248,7 +248,7 @@ static void MX_SPI1_Init(void)
 static void MX_USART4_Init (void)
 {
 	uarthandl.Instance			= UART4;
-	uarthandl.Init.BaudRate		= 9600;
+	uarthandl.Init.BaudRate		= 38400;
 	uarthandl.Init.WordLength 	= UART_WORDLENGTH_8B;
 	uarthandl.Init.StopBits		= UART_STOPBITS_1;
 	uarthandl.Init.Parity		= UART_PARITY_NONE;
